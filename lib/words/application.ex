@@ -8,8 +8,12 @@ defmodule Words.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Words.Worker.start_link(arg)
-      # {Words.Worker, arg}
+      # Owns the ETS tables behind Words.Cache; started first so the
+      # cache is available before any lookup can run.
+      Words.Cache,
+      # Runs the concurrent lookups of Words.lookup_all/1; tasks are
+      # spawned unlinked so a crashing provider is isolated from the caller.
+      {Task.Supervisor, name: Words.TaskSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
